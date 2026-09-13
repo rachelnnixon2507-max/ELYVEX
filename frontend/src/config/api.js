@@ -4,7 +4,7 @@
  * ==============================================================================
  * 
  * Automatically manages:
- * 1. Environment-based base URL resolution (Localhost dev proxy, Live Render, or Vercel API)
+ * 1. Environment-based base URL resolution (Localhost dev proxy vs Live Render backend)
  * 2. URL normalization (removes trailing slashes, auto-appends /api if needed)
  * 3. Safe response parsing (verifies application/json before parsing, eliminates HTML 404 syntax errors)
  * 4. Request timeout protection via AbortController (prevents infinite hanging)
@@ -23,8 +23,12 @@ export function getApiBaseUrl() {
     return clean;
   }
 
-  // In production if VITE_API_URL not specified, relative '/api' calls same origin (Vercel Serverless Functions)
-  // In development Vite proxies '/api' to http://localhost:5001
+  // In production builds or when hosted on Vercel, connect to the live Render backend
+  if (import.meta.env.PROD || (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app'))) {
+    return 'https://elyvex.onrender.com/api';
+  }
+
+  // Development defaults to relative '/api' proxied by Vite to http://localhost:5001
   return '/api';
 }
 
@@ -46,7 +50,8 @@ export async function apiFetch(endpoint, options = {}) {
     ...(options.headers || {})
   };
 
-  const timeoutMs = options.timeout || 25000;
+  // Render free tier wakeups take ~30-40s on cold start
+  const timeoutMs = options.timeout || 45000;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -74,7 +79,7 @@ export async function apiFetch(endpoint, options = {}) {
       if (!res.ok) {
         let helpfulMessage = `Server error (${res.status})`;
         if (res.status === 404 || res.status === 405) {
-          helpfulMessage = `Backend API endpoint not found (${res.status}). If using a separate Render backend, ensure VITE_API_URL is configured in your Vercel Project Settings (e.g. https://your-app.onrender.com/api) and redeploy.`;
+          helpfulMessage = `Backend API endpoint not found (${res.status}). Live service is at https://elyvex.onrender.com/api.`;
         } else if (res.status === 502 || res.status === 503) {
           helpfulMessage = `Backend server is starting up or temporarily unavailable (${res.status}). Free Render instances take ~30-50s to wake up on the first request.`;
         } else if (rawText && rawText.length < 160) {
@@ -110,7 +115,7 @@ export async function apiFetch(endpoint, options = {}) {
       return {
         ok: false,
         status: 408,
-        error: `Transmission timed out (>25s). If hosted on Render free tier, the server may have been sleeping. Please click Retry.`
+        error: `Transmission timed out (>45s). The Render free tier instance is waking up from idle. Please click Retry.`
       };
     }
 
