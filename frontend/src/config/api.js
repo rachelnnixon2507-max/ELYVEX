@@ -4,10 +4,11 @@
  * ==============================================================================
  * 
  * Automatically manages:
- * 1. Environment-based base URL resolution (Localhost dev proxy vs Live Render backend)
+ * 1. Environment-based base URL resolution (Localhost dev proxy, Live Render, or Vercel API)
  * 2. URL normalization (removes trailing slashes, auto-appends /api if needed)
  * 3. Safe response parsing (verifies application/json before parsing, eliminates HTML 404 syntax errors)
- * 4. Resilient handling for Render free tier cold-starts
+ * 4. Request timeout protection via AbortController (prevents infinite hanging)
+ * 5. Resilient handling for Render free tier cold-starts
  */
 
 export function getApiBaseUrl() {
@@ -22,16 +23,17 @@ export function getApiBaseUrl() {
     return clean;
   }
 
-  // Development defaults to relative '/api' proxied by Vite to http://localhost:5001
+  // In production if VITE_API_URL not specified, relative '/api' calls same origin (Vercel Serverless Functions)
+  // In development Vite proxies '/api' to http://localhost:5001
   return '/api';
 }
 
 export const API_BASE = getApiBaseUrl();
 
 /**
- * Universal safe API fetch wrapper
+ * Universal safe API fetch wrapper with timeout & auto-diagnostics
  * @param {string} endpoint - e.g. '/help-requests', '/chat', or '/health'
- * @param {RequestInit} [options] - Standard fetch options
+ * @param {RequestInit & { timeout?: number }} [options] - Standard fetch options + timeout (ms)
  * @returns {Promise<{ ok: boolean, status: number, data?: any, error?: string }>}
  */
 export async function apiFetch(endpoint, options = {}) {
@@ -44,11 +46,18 @@ export async function apiFetch(endpoint, options = {}) {
     ...(options.headers || {})
   };
 
+  const timeoutMs = options.timeout || 25000;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
   try {
     const res = await fetch(fullUrl, {
       ...options,
-      headers
+      headers,
+      signal: controller.signal
     });
+
+    clearTimeout(timeoutId);
 
     const contentType = res.headers.get('content-type') || '';
     let responseData = null;
@@ -65,9 +74,9 @@ export async function apiFetch(endpoint, options = {}) {
       if (!res.ok) {
         let helpfulMessage = `Server error (${res.status})`;
         if (res.status === 404 || res.status === 405) {
-          helpfulMessage = `Backend API unreachable (${res.status} ${res.status === 405 ? 'Method Not Allowed' : 'Not Found'}). The request went to Vercel instead of your live Render backend. Please set VITE_API_URL in your Vercel Project Settings (e.g. https://your-app.onrender.com/api) and redeploy on Vercel.`;
+          helpfulMessage = `Backend API endpoint not found (${res.status}). If using a separate Render backend, ensure VITE_API_URL is configured in your Vercel Project Settings (e.g. https://your-app.onrender.com/api) and redeploy.`;
         } else if (res.status === 502 || res.status === 503) {
-          helpfulMessage = `Backend server is starting up or temporarily unavailable (${res.status}). Free Render instances take ~30-50s to wake up on first request.`;
+          helpfulMessage = `Backend server is starting up or temporarily unavailable (${res.status}). Free Render instances take ~30-50s to wake up on the first request.`;
         } else if (rawText && rawText.length < 160) {
           helpfulMessage = rawText;
         }
@@ -95,11 +104,21 @@ export async function apiFetch(endpoint, options = {}) {
       data: responseData
     };
   } catch (netErr) {
+    clearTimeout(timeoutId);
+    if (netErr.name === 'AbortError') {
+      console.warn(`[API] Request timed out after ${timeoutMs}ms:`, fullUrl);
+      return {
+        ok: false,
+        status: 408,
+        error: `Transmission timed out (>25s). If hosted on Render free tier, the server may have been sleeping. Please click Retry.`
+      };
+    }
+
     console.error(`[API] Network failure while contacting ${fullUrl}:`, netErr);
     return {
       ok: false,
       status: 0,
-      error: `Unable to connect to Echo Hub backend (${netErr.message || 'Network Error'}). If hosted on Render, the instance may be spinning up.`
+      error: `Unable to reach Echo Hub backend (${netErr.message || 'Network Error'}). Please check your connection or retry.`
     };
   }
 }

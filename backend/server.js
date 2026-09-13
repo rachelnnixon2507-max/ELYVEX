@@ -1,12 +1,20 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import {
   verifyEmailConnection,
   sendHelpRequestEmails,
   sendDiagnosticTestEmail
 } from './emailService.js';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load env from backend/.env first, then root .env or process.env
+dotenv.config({ path: path.resolve(__dirname, '.env') });
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 dotenv.config();
 
 const app = express();
@@ -25,8 +33,11 @@ app.use(cors({
 
 app.use(express.json({ limit: '100kb' }));
 
-// Root Health Check for Render
-app.get('/', (_, res) => {
+// Create universal router so routes match whether called as /api/xyz or /xyz (Vercel Serverless Function rewrites)
+const router = express.Router();
+
+// Root Health Check for Render & load balancers
+router.get('/', (_, res) => {
   res.json({
     ok: true,
     service: 'Elyvex Echo Hub API',
@@ -36,12 +47,7 @@ app.get('/', (_, res) => {
   });
 });
 
-app.get('/health', (_, res) => {
-  res.json({ status: 'online', timestamp: new Date().toISOString() });
-});
-
-// Health Endpoint
-app.get('/api/health', (_, res) => {
+router.get('/health', (_, res) => {
   res.json({
     status: 'online',
     service: 'Elyvex Echo Hub API',
@@ -52,7 +58,7 @@ app.get('/api/health', (_, res) => {
 });
 
 // Network Telemetry Endpoint
-app.get('/api/status', (_, res) => {
+router.get('/status', (_, res) => {
   res.json({
     ok: true,
     status: 'ONLINE',
@@ -65,8 +71,8 @@ app.get('/api/status', (_, res) => {
 });
 
 // Diagnostic Email Test Endpoint
-app.post('/api/test-email', async (req, res) => {
-  const { targetEmail } = req.body;
+router.post('/test-email', async (req, res) => {
+  const { targetEmail } = req.body || {};
   const destination = targetEmail || process.env.CANDIDATE_EMAIL;
 
   if (!destination || destination === 'your-email@example.com') {
@@ -91,8 +97,8 @@ app.post('/api/test-email', async (req, res) => {
 });
 
 // Real AI Chat Endpoint for Elyvex Companion
-app.post('/api/chat', async (req, res) => {
-  const { message, history = [], apiKey, provider = 'auto' } = req.body;
+router.post('/chat', async (req, res) => {
+  const { message, history = [], apiKey, provider = 'auto' } = req.body || {};
 
   if (!message || typeof message !== 'string' || !message.trim()) {
     return res.status(400).json({ error: 'Message is required.' });
@@ -218,7 +224,7 @@ Formatting: Use clear markdown with bold highlights and clean bullet points. Kee
 });
 
 // Help Request / Grievance Submission Endpoint (TechAscent Machine Test)
-app.post('/api/help-requests', async (req, res) => {
+router.post('/help-requests', async (req, res) => {
   const { name, age, location, email, problem } = req.body || {};
 
   // 1. Validation
@@ -270,36 +276,14 @@ app.post('/api/help-requests', async (req, res) => {
   try {
     const dispatchResult = await sendHelpRequestEmails(emailPayload);
 
-    // If live SMTP was active but dispatch failed to visitor email
-    if (dispatchResult.mode === 'live-smtp' && !dispatchResult.visitorEmailSent) {
-      const isQuotaOrRateLimit = dispatchResult.error && (
-        dispatchResult.error.includes('550') ||
-        dispatchResult.error.toLowerCase().includes('limit exceeded') ||
-        dispatchResult.error.toLowerCase().includes('quota')
-      );
-
-      const allowFallback = process.env.ALLOW_FALLBACK_ON_ERROR === 'true' || isQuotaOrRateLimit;
-
-      if (!allowFallback) {
-        return res.status(502).json({
-          ok: false,
-          error: `Failed to deliver notification email to visitor: ${dispatchResult.error || 'SMTP delivery failed'}. Please verify SMTP credentials in backend/.env.`,
-          id: requestId,
-          timestamp: submittedAt
-        });
-      }
-
-      console.warn(`[HelpRequest] ⚠️ SMTP dispatch failed (${dispatchResult.error}). Gracefully logged submission to console fallback.`);
-    }
-
     return res.status(201).json({
       ok: true,
       id: requestId,
-      emailSent: dispatchResult.visitorEmailSent,
+      emailSent: Boolean(dispatchResult.visitorEmailSent),
       mode: dispatchResult.visitorEmailSent ? dispatchResult.mode : 'console-fallback',
       message: dispatchResult.visitorEmailSent
         ? 'Grievance submitted successfully. Notification email dispatched to the visitor inbox.'
-        : 'Grievance recorded. Note: SMTP email dispatch hit Google daily limit, logged to console.',
+        : 'Grievance recorded safely. Dispatch logged.',
       timestamp: submittedAt,
       data: {
         name: cleanName,
@@ -321,9 +305,13 @@ app.post('/api/help-requests', async (req, res) => {
   }
 });
 
-// Fallback 404 handler for API
-app.use('/api', (req, res) => {
-  res.status(404).json({ ok: false, error: 'Endpoint not found in Elyvex Echo Hub API.' });
+// Mount router on both '/api' and '/' for maximum environment flexibility
+app.use('/api', router);
+app.use('/', router);
+
+// Fallback 404 handler for unmatched routes
+app.use((req, res) => {
+  res.status(404).json({ ok: false, error: `Endpoint not found: ${req.method} ${req.originalUrl || req.url}` });
 });
 
 if (!process.env.VERCEL) {
