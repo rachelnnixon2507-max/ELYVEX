@@ -6,8 +6,7 @@ import {
   Mail, Calendar, MapPin, UserCheck, FileText, AlertCircle
 } from 'lucide-react';
 import { sfx } from '../utils/SoundEffects';
-
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+import { apiFetch } from '../config/api';
 
 export default function AskElyvexPage() {
   const [messages, setMessages] = useState([
@@ -54,31 +53,19 @@ export default function AskElyvexPage() {
     const t2 = setTimeout(() => setLoadingText('Dispatching automatic email notification to Dr. Elyvex...'), 1100);
 
     try {
-      const res = await fetch(`${API_BASE}/help-requests`, {
+      const res = await apiFetch('/help-requests', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
       clearTimeout(t1);
       clearTimeout(t2);
 
-      let data = {};
-      const contentType = res.headers.get('content-type') || '';
-      if (contentType.includes('application/json')) {
-        try {
-          data = await res.json();
-        } catch {
-          data = {};
-        }
+      if (!res.ok) {
+        throw new Error(res.error || 'Submission failed to dispatch.');
       }
 
-      if (!res.ok || data.ok === false) {
-        const errorMsg = data.error || (res.status === 404
-          ? 'Echo Hub API is unreachable (404 Not Found). The backend server is not connected. If hosted on Vercel, set VITE_API_URL or deploy the backend API.'
-          : `Server responded with status code (${res.status}).`);
-        throw new Error(errorMsg);
-      }
+      const data = res.data || {};
 
       sfx.playSuccess();
       setConfirmationData({

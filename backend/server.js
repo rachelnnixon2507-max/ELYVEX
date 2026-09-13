@@ -12,9 +12,33 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-// Middlewares
-app.use(cors({ origin: process.env.FRONTEND_ORIGIN || true }));
+// Robust CORS Middleware supporting Vercel previews & production domains
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow all origins (Vercel, custom domain, localhost, Postman)
+    callback(null, true);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With']
+}));
+
 app.use(express.json({ limit: '100kb' }));
+
+// Root Health Check for Render
+app.get('/', (_, res) => {
+  res.json({
+    ok: true,
+    service: 'Elyvex Echo Hub API',
+    status: 'ONLINE',
+    version: '2.1.0',
+    documentation: 'https://elyvex.vercel.app'
+  });
+});
+
+app.get('/health', (_, res) => {
+  res.json({ status: 'online', timestamp: new Date().toISOString() });
+});
 
 // Health Endpoint
 app.get('/api/health', (_, res) => {

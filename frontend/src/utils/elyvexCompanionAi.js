@@ -46,7 +46,7 @@ function extractDynamicChips(query, replyText) {
   ];
 }
 
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+import { apiFetch } from '../config/api';
 
 /**
  * Generates an intelligent, contextual, and inspiring response from Dr. Elyvex.
@@ -60,29 +60,24 @@ export async function getElyvexCompanionReply(rawInput, history = []) {
 
   // Query high-speed Elyvex Neural Core endpoint
   try {
-    const apiRes = await fetch(`${API_BASE}/chat`, {
+    const apiRes = await apiFetch('/chat', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         message: rawInput,
         history: history.slice(-6)
       })
     });
 
-    const contentType = apiRes.headers.get('content-type') || '';
-    if (apiRes.ok && contentType.includes('application/json')) {
-      const data = await apiRes.json();
-      if (data.reply) {
-        return {
-          text: data.reply,
-          chips: data.chips || extractDynamicChips(rawInput, data.reply),
-          link: data.link || null,
-          source: 'Elyvex Neural Core'
-        };
-      }
+    if (apiRes.ok && apiRes.data && apiRes.data.reply) {
+      return {
+        text: apiRes.data.reply,
+        chips: apiRes.data.chips || extractDynamicChips(rawInput, apiRes.data.reply),
+        link: apiRes.data.link || null,
+        source: 'Elyvex Neural Core'
+      };
     }
   } catch (netErr) {
-    console.debug('[NeuralCore] Running local offline reasoning matrix.');
+    console.debug('[NeuralCore] Running local offline reasoning matrix:', netErr);
   }
 
   // 1. Distress / Emergency / Cyber Threat (High Priority)

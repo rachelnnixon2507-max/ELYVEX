@@ -5,8 +5,7 @@ import {
   PhoneCall, HeartPulse, Send, CheckCircle2
 } from 'lucide-react';
 import { sfx } from '../utils/SoundEffects';
-
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+import { apiFetch } from '../config/api';
 
 export default function ContactPage() {
   const [quickBeaconSent, setQuickBeaconSent] = useState(false);
@@ -21,9 +20,8 @@ export default function ContactPage() {
     sfx.playBeacon();
 
     try {
-      await fetch(`${API_BASE}/help-requests`, {
+      await apiFetch('/help-requests', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: 'Emergency Beacon User',
           age: 20,
