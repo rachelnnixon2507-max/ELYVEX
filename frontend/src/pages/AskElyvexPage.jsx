@@ -37,11 +37,13 @@ export default function AskElyvexPage() {
   const [submissionError, setSubmissionError] = useState('');
   const [loadingText, setLoadingText] = useState('Establishing secure channel...');
   const [confirmationData, setConfirmationData] = useState(null);
-  const messagesEndRef = useRef(null);
+  const chatStreamRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (chatStreamRef.current) {
+      chatStreamRef.current.scrollTop = chatStreamRef.current.scrollHeight;
+    }
   }, [messages, validationError]);
 
   const submitPayload = async (payload) => {
@@ -61,10 +63,21 @@ export default function AskElyvexPage() {
       clearTimeout(t1);
       clearTimeout(t2);
 
-      const data = await res.json();
+      let data = {};
+      const contentType = res.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        try {
+          data = await res.json();
+        } catch {
+          data = {};
+        }
+      }
 
       if (!res.ok || data.ok === false) {
-        throw new Error(data.error || `Server responded with error status (${res.status})`);
+        const errorMsg = data.error || (res.status === 404
+          ? 'Echo Hub API is unreachable (404 Not Found). The backend server is not connected. If hosted on Vercel, set VITE_API_URL or deploy the backend API.'
+          : `Server responded with status code (${res.status}).`);
+        throw new Error(errorMsg);
       }
 
       sfx.playSuccess();
@@ -252,15 +265,10 @@ export default function AskElyvexPage() {
                   </div>
                 </div>
               </div>
-
-              <div className="chat-security-badge">
-                <Lock size={13} />
-                <span>END-TO-END ENCRYPTED</span>
-              </div>
             </div>
 
             {/* Chat Stream */}
-            <div className="chat-portal-stream" role="log" aria-live="polite">
+            <div className="chat-portal-stream" ref={chatStreamRef} role="log" aria-live="polite">
               {messages.map((msg) => (
                 <div key={msg.id} className={`chat-bubble-row ${msg.from}`}>
                   {msg.from === 'bot' && (
@@ -283,8 +291,6 @@ export default function AskElyvexPage() {
                   </div>
                 </div>
               )}
-
-              <div ref={messagesEndRef} />
             </div>
 
             {/* Validation Alert */}
@@ -317,7 +323,6 @@ export default function AskElyvexPage() {
                       ? "Type your email address (e.g. name@example.com)..."
                       : "Tell Elyvex what happened..."
                   }
-                  autoFocus
                 />
                 <button
                   type="submit"

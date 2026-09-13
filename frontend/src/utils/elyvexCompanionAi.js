@@ -46,6 +46,8 @@ function extractDynamicChips(query, replyText) {
   ];
 }
 
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
+
 /**
  * Generates an intelligent, contextual, and inspiring response from Dr. Elyvex.
  * Powered by high-speed neural processing matrix and local reasoning core.
@@ -58,7 +60,7 @@ export async function getElyvexCompanionReply(rawInput, history = []) {
 
   // Query high-speed Elyvex Neural Core endpoint
   try {
-    const apiRes = await fetch('/api/chat', {
+    const apiRes = await fetch(`${API_BASE}/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -67,7 +69,8 @@ export async function getElyvexCompanionReply(rawInput, history = []) {
       })
     });
 
-    if (apiRes.ok) {
+    const contentType = apiRes.headers.get('content-type') || '';
+    if (apiRes.ok && contentType.includes('application/json')) {
       const data = await apiRes.json();
       if (data.reply) {
         return {

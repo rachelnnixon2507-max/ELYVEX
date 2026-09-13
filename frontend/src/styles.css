@@ -4639,12 +4639,7 @@ html, body {
 }
 
 .mobile-drawer-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: 16px;
-  border-bottom: 1px solid rgba(0, 240, 255, 0.2);
-  margin-bottom: 8px;
+  display: none;
 }
 
 .mobile-drawer-close-btn {
@@ -4667,12 +4662,7 @@ html, body {
 }
 
 .mobile-drawer-footer {
-  margin-top: auto;
-  padding-top: 22px;
-  border-top: 1px solid rgba(0, 240, 255, 0.15);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  display: none;
 }
 
 .mobile-drawer-cta {
@@ -4694,27 +4684,23 @@ html, body {
 @media (max-width: 1150px) {
   .hero-section.myth-hero-theme {
     grid-template-columns: 1fr;
-    padding-top: 120px;
-    gap: 36px;
-    text-align: center;
+    padding-top: 110px;
+    gap: 30px;
   }
 
   .myth-hero-left {
-    align-items: center;
+    align-items: flex-start;
     width: 100%;
+    max-width: 680px;
   }
 
   .myth-narrative-lead {
-    margin-left: auto;
-    margin-right: auto;
+    margin-left: 0;
+    margin-right: 0;
   }
 
   .myth-hero-actions-row {
-    justify-content: center;
-  }
-
-  .myth-three-pillars-strip {
-    margin: 0 auto;
+    justify-content: flex-start;
   }
 
   .hub-master-container {
@@ -4751,6 +4737,15 @@ html, body {
    BREAKPOINT 2: TABLETS & IPADS (max-width: 1024px)
    ========================================================================== */
 @media (max-width: 1024px) {
+  .bg-hero-nightcity {
+    background-size: cover;
+    background-position: 58% center;
+    background-image: 
+      linear-gradient(180deg, rgba(2, 6, 17, 0.75) 0%, rgba(2, 6, 17, 0.35) 45%, #020611 96%),
+      linear-gradient(90deg, rgba(2, 6, 17, 0.85) 0%, rgba(2, 6, 17, 0.4) 50%, transparent 100%),
+      url('/images/1.png');
+  }
+
   .hero-right-hologram {
     display: none !important;
   }
@@ -4783,11 +4778,11 @@ html, body {
     height: 70px;
   }
 
-  .nav-links {
-    display: none;
+  .desktop-nav-links {
+    display: none !important;
   }
 
-  .nav-links.mobile-open {
+  .mobile-drawer-panel {
     display: flex;
     flex-direction: column;
     position: fixed;
@@ -4805,6 +4800,7 @@ html, body {
     z-index: 9999;
     overflow-y: auto;
     animation: drawerSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-sizing: border-box;
   }
 
   @keyframes drawerSlide {
@@ -4812,7 +4808,24 @@ html, body {
     to { transform: translateY(0); opacity: 1; }
   }
 
-  .nav-links.mobile-open .nav-link-item {
+  .mobile-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+    margin-bottom: 8px;
+    width: 100%;
+  }
+
+  .mobile-drawer-nav-items {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .nav-link-item.mobile-item {
     font-size: 15px;
     padding: 13px 18px;
     width: 100%;
@@ -4821,13 +4834,24 @@ html, body {
     border: 1px solid rgba(255, 255, 255, 0.08);
     display: flex;
     align-items: center;
+    box-sizing: border-box;
   }
 
-  .nav-links.mobile-open .nav-link-item.active {
+  .nav-link-item.mobile-item.active {
     background: rgba(0, 240, 255, 0.15);
     border-color: rgba(0, 240, 255, 0.4);
     color: #00f0ff;
     box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+  }
+
+  .mobile-drawer-footer {
+    margin-top: auto;
+    padding-top: 22px;
+    border-top: 1px solid rgba(0, 240, 255, 0.15);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
   }
 
   .mobile-menu-toggle {
@@ -4848,16 +4872,6 @@ html, body {
   .mobile-menu-toggle:hover {
     background: rgba(0, 240, 255, 0.15);
     border-color: #00f0ff;
-  }
-
-  /* Responsive Hero Background Adaptation */
-  .bg-hero-nightcity {
-    min-height: auto;
-    background-size: cover;
-    background-position: 70% top;
-    background-image: 
-      linear-gradient(180deg, rgba(2, 6, 17, 0.72) 0%, rgba(2, 6, 17, 0.58) 50%, #020611 96%),
-      url('/images/1.png');
   }
 
   .bg-who-elyvex {
@@ -4914,21 +4928,57 @@ html, body {
 /* ==========================================================================
    BREAKPOINT 4: SMARTPHONES (max-width: 640px)
    Covers: 320px | 360px | 375px | 390px | 414px | 430px
+   Cinematic Futuristic Movie-Poster Mobile Hero Layout
    ========================================================================== */
 @media (max-width: 640px) {
   .site-section {
-    padding: 50px 4vw;
+    padding: 48px 4vw;
   }
 
   .page-header-section {
     padding: 85px 4vw 24px;
   }
 
+  /* Cinematic Movie-Poster Hero Backdrop */
+  .bg-hero-nightcity {
+    min-height: 100dvh;
+    height: auto;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: 65% center;
+    background-attachment: scroll;
+    background-image: 
+      /* Top-left dark gradient for crisp readability of headline without covering character */
+      radial-gradient(ellipse at 18% 12%, rgba(2, 6, 17, 0.96) 0%, rgba(2, 6, 17, 0.78) 42%, rgba(2, 6, 17, 0.15) 75%, transparent 100%),
+      /* Soft left-edge shadow */
+      linear-gradient(90deg, rgba(2, 6, 17, 0.85) 0%, rgba(2, 6, 17, 0.35) 45%, transparent 80%),
+      /* Bottom cinematic dark fade for CTA buttons and telemetry */
+      linear-gradient(180deg, transparent 38%, rgba(2, 6, 17, 0.4) 58%, rgba(2, 6, 17, 0.9) 82%, #020611 100%),
+      url('/images/1.png');
+  }
+
   .hero-section.myth-hero-theme {
-    padding-top: 86px;
-    padding-bottom: 36px;
-    min-height: auto;
-    gap: 20px;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding-top: max(80px, calc(env(safe-area-inset-top, 0px) + 68px));
+    padding-bottom: max(24px, calc(env(safe-area-inset-bottom, 0px) + 16px));
+    padding-left: max(16px, env(safe-area-inset-left, 16px));
+    padding-right: max(16px, env(safe-area-inset-right, 16px));
+    box-sizing: border-box;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .myth-hero-left {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: calc(100dvh - 110px);
+    width: 100%;
+    text-align: left;
+    align-items: flex-start;
   }
 
   /* Compact Navbar for Mobile */
@@ -4969,66 +5019,83 @@ html, body {
     gap: 4px;
   }
 
-  /* Hero Fluid Typography */
+  /* Top Section Typography (Top-Left Positioned) */
   .hero-cursive-tagline {
     font-size: clamp(20px, 5.5vw, 26px);
-    margin-bottom: 6px;
-    transform: rotate(-2deg);
+    color: #00f0ff;
+    text-shadow: 0 0 14px rgba(0, 240, 255, 0.9);
+    margin-bottom: 4px;
+    transform: rotate(-1.5deg);
+    text-align: left;
   }
 
   .tracker-frequency-row {
-    justify-content: center;
+    justify-content: flex-start;
     margin-bottom: 4px;
   }
 
   .tracker-freq-label {
-    font-size: clamp(9px, 2.7vw, 10.5px);
+    font-size: clamp(8.5px, 2.5vw, 10px);
     letter-spacing: 0.14em;
   }
 
   .tracker-breadcrumbs-strip {
-    font-size: clamp(8.5px, 2.5vw, 10.5px);
-    justify-content: center;
-    gap: 4px 6px;
-    line-height: 1.5;
+    font-size: clamp(8px, 2.3vw, 9.5px);
+    justify-content: flex-start;
+    gap: 3px 6px;
+    line-height: 1.4;
   }
 
   .myth-giant-title-container {
-    margin: 4px 0 8px;
+    margin: 2px 0 6px;
+    text-align: left;
   }
 
   .myth-headline-stacked {
-    align-items: center;
-    text-align: center;
+    align-items: flex-start;
+    text-align: left;
   }
 
   .myth-title-word.word-the {
-    font-size: clamp(42px, 12.5vw, 68px);
-    letter-spacing: 0.02em;
+    font-size: clamp(40px, 12vw, 64px);
+    letter-spacing: 0.01em;
     line-height: 0.88;
+    text-shadow: 0 0 20px rgba(0, 240, 255, 0.35);
   }
 
   .myth-title-word.word-myth {
-    font-size: clamp(48px, 14vw, 78px);
+    font-size: clamp(46px, 13.5vw, 72px);
     letter-spacing: 0.01em;
     line-height: 0.88;
+    text-shadow: 0 0 25px rgba(0, 240, 255, 0.45);
   }
 
   .myth-subheading-tagline {
-    font-size: clamp(11.5px, 3.2vw, 14px);
-    letter-spacing: 0.08em;
-    line-height: 1.45;
-    text-align: center;
-    margin-bottom: 10px;
+    font-size: clamp(10px, 2.8vw, 12px);
+    letter-spacing: 0.12em;
+    line-height: 1.4;
+    text-align: left;
+    color: #38bdf8;
+    margin-bottom: 0;
+    max-width: 320px;
   }
 
+  /* Bottom Section: Frosted Narrative Lead, CTA Buttons & Resonance Strip */
   .myth-narrative-lead {
-    font-size: 13.5px;
-    line-height: 1.6;
-    max-width: 380px;
-    text-align: center;
-    margin: 0 auto 20px;
-    padding: 0 4px;
+    font-size: 13px;
+    line-height: 1.55;
+    text-align: left;
+    background: rgba(2, 6, 17, 0.72);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-left: 3px solid #00f0ff;
+    border-radius: 0 10px 10px 0;
+    padding: 10px 14px;
+    margin: 14px 0 16px;
+    max-width: 100%;
+    box-sizing: border-box;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    color: #e2e8f0;
   }
 
   .page-title-main {
@@ -5052,14 +5119,14 @@ html, body {
     line-height: 1.6;
   }
 
-  /* CTA Buttons Group */
+  /* Vertically Stacked CTA Buttons */
   .myth-hero-actions-row {
     display: flex;
     flex-direction: column;
     width: 100%;
-    max-width: 360px;
-    margin: 0 auto 24px;
-    gap: 12px;
+    max-width: 380px;
+    margin: 0 0 14px;
+    gap: 10px;
   }
 
   .myth-cta-primary-summon,
@@ -5070,22 +5137,32 @@ html, body {
     min-height: 48px;
     justify-content: center;
     text-align: center;
-    font-size: 12px;
-    padding: 13px 20px;
+    font-size: 12.5px;
+    padding: 12px 18px;
     box-sizing: border-box;
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    font-weight: 700;
+  }
+
+  .myth-cta-primary-summon {
+    box-shadow: 0 0 25px rgba(0, 240, 255, 0.4), 0 4px 15px rgba(0, 0, 0, 0.6);
+  }
+
+  .myth-cta-secondary-watch {
+    background: rgba(4, 14, 30, 0.75);
+    backdrop-filter: blur(10px);
   }
 
   /* 3-Pillar Resonance Strip on Mobile */
   .myth-three-pillars-strip {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 6px;
     width: 100%;
     max-width: 380px;
-    margin: 0 auto;
+    margin: 0;
     border: none;
     background: transparent;
     padding: 0;
@@ -5095,26 +5172,27 @@ html, body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 18px;
-    background: rgba(15, 23, 42, 0.65);
-    border: 1px solid rgba(0, 240, 255, 0.2);
+    padding: 8px 14px;
+    background: rgba(4, 14, 30, 0.65);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(0, 240, 255, 0.18);
     border-left: 3px solid #00f0ff;
-    border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    border-radius: 6px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
   }
 
   .pillar-top-label {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.12em;
     color: #ffffff;
   }
 
   .pillar-bottom-sub {
-    font-size: 10.5px;
+    font-size: 9.5px;
     font-weight: 700;
     letter-spacing: 0.1em;
-    color: #38bdf8;
+    color: #00f0ff;
   }
 
   /* Mobile Interactive Companion Chat Box */

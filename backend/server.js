@@ -302,7 +302,11 @@ app.use('/api', (req, res) => {
   res.status(404).json({ ok: false, error: 'Endpoint not found in Elyvex Echo Hub API.' });
 });
 
-app.listen(PORT, async () => {
-  console.log(`⚡ Elyvex Echo Hub API running on http://localhost:${PORT}`);
-  await verifyEmailConnection();
-});
+if (!process.env.VERCEL) {
+  app.listen(PORT, async () => {
+    console.log(`⚡ Elyvex Echo Hub API running on http://localhost:${PORT}`);
+    await verifyEmailConnection();
+  });
+}
+
+export default app;

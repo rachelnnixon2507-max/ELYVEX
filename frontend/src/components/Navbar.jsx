@@ -46,30 +46,8 @@ export default function Navbar() {
         </div>
       </Link>
 
-      {/* Navigation Routes & Mobile Drawer Overlay */}
-      {mobileOpen && (
-        <div
-          className="mobile-nav-backdrop"
-          onClick={() => setMobileOpen(false)}
-          aria-hidden="true"
-        />
-      )}
-
-      <nav className={`nav-links ${mobileOpen ? 'mobile-open' : ''}`} aria-label="Main Navigation">
-        <div className="mobile-drawer-header">
-          <div className="nav-brand-text">
-            <span className="nav-brand-title">ELYVEX ECHO HUB</span>
-            <span className="nav-brand-subtitle">RESONANCE NETWORK // 2079</span>
-          </div>
-          <button
-            className="mobile-drawer-close-btn"
-            onClick={() => setMobileOpen(false)}
-            aria-label="Close navigation menu"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
+      {/* Desktop Main Navigation Links (Visible on desktop >900px) */}
+      <nav className="nav-links desktop-nav-links" aria-label="Main Navigation">
         <NavLink
           to="/"
           end
@@ -106,27 +84,92 @@ export default function Navbar() {
         >
           ECHO HUB
         </NavLink>
-
-        <div className="mobile-drawer-footer">
-          <Link
-            to="/ask-elyvex"
-            className="myth-cta-primary-summon mobile-drawer-cta"
-            onClick={() => handleNavAction('/ask-elyvex')}
-          >
-            <Zap size={14} fill="currentColor" />
-            <span>ASK ELYVEX FOR HELP</span>
-            <ArrowRight size={14} />
-          </Link>
-
-          <button
-            className="audio-toggle-btn myth-sfx-btn mobile-drawer-sfx"
-            onClick={handleAudioToggle}
-          >
-            {audioOn ? <Volume2 size={14} /> : <VolumeX size={14} />}
-            <span>AUDIO SFX: {audioOn ? 'ON' : 'OFF'}</span>
-          </button>
-        </div>
       </nav>
+
+      {/* Mobile Drawer Panel (Only active on mobile when mobileOpen is true) */}
+      {mobileOpen && (
+        <>
+          <div
+            className="mobile-nav-backdrop"
+            onClick={() => setMobileOpen(false)}
+            aria-hidden="true"
+          />
+          <div className="mobile-drawer-panel" aria-label="Mobile Navigation">
+            <div className="mobile-drawer-header">
+              <div className="nav-brand-text">
+                <span className="nav-brand-title">ELYVEX ECHO HUB</span>
+                <span className="nav-brand-subtitle">RESONANCE NETWORK // 2079</span>
+              </div>
+              <button
+                className="mobile-drawer-close-btn"
+                onClick={() => setMobileOpen(false)}
+                aria-label="Close navigation menu"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="mobile-drawer-nav-items">
+              <NavLink
+                to="/"
+                end
+                className={({ isActive }) => `nav-link-item mobile-item ${isActive ? 'active' : ''}`}
+                onClick={() => handleNavAction('/')}
+              >
+                ELYVEX
+              </NavLink>
+              <NavLink
+                to="/origin"
+                className={({ isActive }) => `nav-link-item mobile-item ${isActive ? 'active' : ''}`}
+                onClick={() => handleNavAction('/origin')}
+              >
+                ORIGIN
+              </NavLink>
+              <NavLink
+                to="/powers"
+                className={({ isActive }) => `nav-link-item mobile-item ${isActive ? 'active' : ''}`}
+                onClick={() => handleNavAction('/powers')}
+              >
+                POWERS
+              </NavLink>
+              <NavLink
+                to="/mission"
+                className={({ isActive }) => `nav-link-item mobile-item ${isActive ? 'active' : ''}`}
+                onClick={() => handleNavAction('/mission')}
+              >
+                MISSION
+              </NavLink>
+              <NavLink
+                to="/echo-hub"
+                className={({ isActive }) => `nav-link-item mobile-item ${isActive ? 'active' : ''}`}
+                onClick={() => handleNavAction('/echo-hub')}
+              >
+                ECHO HUB
+              </NavLink>
+            </div>
+
+            <div className="mobile-drawer-footer">
+              <Link
+                to="/ask-elyvex"
+                className="myth-cta-primary-summon mobile-drawer-cta"
+                onClick={() => handleNavAction('/ask-elyvex')}
+              >
+                <Zap size={14} fill="currentColor" />
+                <span>ASK ELYVEX FOR HELP</span>
+                <ArrowRight size={14} />
+              </Link>
+
+              <button
+                className="audio-toggle-btn myth-sfx-btn mobile-drawer-sfx"
+                onClick={handleAudioToggle}
+              >
+                {audioOn ? <Volume2 size={14} /> : <VolumeX size={14} />}
+                <span>AUDIO SFX: {audioOn ? 'ON' : 'OFF'}</span>
+              </button>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Right Tools & Ask Elyvex CTA */}
       <div className="nav-right">
